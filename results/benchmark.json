@@ -1,0 +1,158 @@
+{
+  "clickhouse_version": "25.3.6.56",
+  "runs": 5,
+  "query_cache": false,
+  "warmup": true,
+  "queries": {
+    "baseline": {
+      "median_client_ms": 42.86,
+      "samples": [
+        {
+          "client_ms": 54.929,
+          "server_ms": 53,
+          "read_rows": 1048575,
+          "read_bytes": 116942830,
+          "memory_bytes": 23234273
+        },
+        {
+          "client_ms": 39.922,
+          "server_ms": 37,
+          "read_rows": 1048575,
+          "read_bytes": 116942830,
+          "memory_bytes": 23234273
+        },
+        {
+          "client_ms": 44.765,
+          "server_ms": 42,
+          "read_rows": 1048575,
+          "read_bytes": 116942830,
+          "memory_bytes": 23233777
+        },
+        {
+          "client_ms": 38.639,
+          "server_ms": 37,
+          "read_rows": 1048575,
+          "read_bytes": 116942830,
+          "memory_bytes": 23234273
+        },
+        {
+          "client_ms": 42.86,
+          "server_ms": 40,
+          "read_rows": 1048575,
+          "read_bytes": 116942830,
+          "memory_bytes": 23233777
+        }
+      ]
+    },
+    "raw": {
+      "median_client_ms": 43.172,
+      "samples": [
+        {
+          "client_ms": 48.054,
+          "server_ms": 46,
+          "read_rows": 1048575,
+          "read_bytes": 87050359,
+          "memory_bytes": 4955334
+        },
+        {
+          "client_ms": 38.164,
+          "server_ms": 36,
+          "read_rows": 1048575,
+          "read_bytes": 87050359,
+          "memory_bytes": 4955830
+        },
+        {
+          "client_ms": 43.172,
+          "server_ms": 41,
+          "read_rows": 1048575,
+          "read_bytes": 87050359,
+          "memory_bytes": 4955830
+        },
+        {
+          "client_ms": 39.759,
+          "server_ms": 37,
+          "read_rows": 1048575,
+          "read_bytes": 87050359,
+          "memory_bytes": 4955334
+        },
+        {
+          "client_ms": 43.807,
+          "server_ms": 42,
+          "read_rows": 1048575,
+          "read_bytes": 87050359,
+          "memory_bytes": 4955830
+        }
+      ]
+    },
+    "aggregate": {
+      "median_client_ms": 2.826,
+      "samples": [
+        {
+          "client_ms": 2.826,
+          "server_ms": 1,
+          "read_rows": 51,
+          "read_bytes": 7557,
+          "memory_bytes": 29182
+        },
+        {
+          "client_ms": 2.536,
+          "server_ms": 1,
+          "read_rows": 51,
+          "read_bytes": 7557,
+          "memory_bytes": 29182
+        },
+        {
+          "client_ms": 3.868,
+          "server_ms": 2,
+          "read_rows": 51,
+          "read_bytes": 7557,
+          "memory_bytes": 39153
+        },
+        {
+          "client_ms": 4.065,
+          "server_ms": 2,
+          "read_rows": 51,
+          "read_bytes": 7557,
+          "memory_bytes": 29246
+        },
+        {
+          "client_ms": 2.576,
+          "server_ms": 1,
+          "read_rows": 51,
+          "read_bytes": 7557,
+          "memory_bytes": 29182
+        }
+      ]
+    }
+  },
+  "storage_columns": [
+    "table",
+    "physical_rows",
+    "compressed_bytes",
+    "uncompressed_bytes",
+    "disk_bytes"
+  ],
+  "storage": [
+    [
+      "max_by_state",
+      51,
+      4292,
+      8226,
+      4393
+    ],
+    [
+      "transactions",
+      1048575,
+      89594609,
+      521663711,
+      89648846
+    ],
+    [
+      "transactions_baseline",
+      1048575,
+      230797875,
+      601874899,
+      230803209
+    ]
+  ]
+}

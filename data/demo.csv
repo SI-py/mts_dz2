@@ -1,0 +1,11 @@
+transaction_time,merch,cat_id,amount,us_state,trans_num
+2019-01-01 12:00,Demo Shop,grocery_pos,10.01,CA,demo-001
+2019-01-01 12:01,Demo Shop,shopping_net,125.50,CA,demo-002
+2019-02-01 12:00,Demo Shop,travel,125.50,CA,demo-003
+2019-01-01 12:00,Demo Shop,gas_transport,80.00,NY,demo-004
+2019-02-01 12:00,Demo Shop,grocery_pos,40.00,NY,demo-005
+2019-03-01 12:00,Demo Shop,entertainment,999.99,TX,demo-006
+2019-03-01 12:01,Demo Shop,misc_pos,0.00,TX,demo-007
+2019-03-01 12:00,Demo Shop,health_fitness,0.10,WA,demo-008
+2019-03-01 12:01,Demo Shop,food_dining,0.20,WA,demo-009
+2019-03-01 12:00,Demo Shop,home,42.42,FL,demo-010
