@@ -1,0 +1,23 @@
+[sqlfluff]
+dialect = clickhouse
+templater = dbt
+max_line_length = 110
+exclude_rules = AM04, RF04, CP03
+
+[sqlfluff:templater:dbt]
+project_dir = .
+profiles_dir = .
+profile = fraud_analytics
+target = local
+
+[sqlfluff:indentation]
+indented_joins = false
+
+[sqlfluff:rules:capitalisation.keywords]
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.functions]
+extended_capitalisation_policy = consistent
+
+[sqlfluff:rules:capitalisation.literals]
+capitalisation_policy = lower

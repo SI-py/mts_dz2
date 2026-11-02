@@ -1,0 +1,7 @@
+model,rows
+mart_daily_state_metrics,21386
+mart_fraud_by_category,14
+mart_fraud_by_state,51
+mart_customer_risk_profile,965
+mart_hourly_fraud_pattern,168
+mart_merchant_analytics,693

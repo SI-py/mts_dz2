@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: dbt-sqlfluff
+        name: SQLFluff dbt
+        entry: python3 dbt/scripts/run.py lint
+        language: system
+        files: ^dbt/(models|macros|tests)/.*\.sql$
+        pass_filenames: false

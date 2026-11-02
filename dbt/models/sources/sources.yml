@@ -1,0 +1,46 @@
+version: 2
+sources:
+  - name: raw
+    schema: transactions_db
+    description: Транзакции teta-ml-1-2025 с известным признаком target. Загружается только train.csv.
+    tables:
+      - name: transactions
+        description: Неагрегированные строки CSV. Одна строка соответствует одной транзакции.
+        columns:
+          - name: transaction_id
+            description: SHA-256 идентификатора файла и номера строки, не ключ клиента.
+            data_tests: [not_null, unique]
+          - name: transaction_time
+            description: Локальное время из CSV без информации о часовом поясе, хранится как UTC.
+            data_tests: [not_null]
+          - name: amount
+            description: Исходная сумма Float64. В staging преобразуется в Decimal через строку.
+            data_tests:
+              - not_null
+              - dbt_expectations.expect_column_values_to_be_between:
+                  arguments:
+                    min_value: 0
+          - name: target
+            description: Наблюдаемый фрод, 0 - обычная транзакция, 1 - мошенническая.
+            data_tests:
+              - not_null
+              - accepted_values:
+                  arguments:
+                    values: [0, 1]
+                    quote: false
+          - name: merch
+            description: Название мерчанта.
+          - name: cat_id
+            description: Категория покупки.
+          - name: us_state
+            description: Код штата или DC.
+          - name: name_1
+            description: Имя, часть составного ключа клиента.
+          - name: name_2
+            description: Фамилия, часть составного ключа клиента.
+          - name: street
+            description: Адрес, часть составного ключа клиента.
+          - name: one_city
+            description: Город, часть составного ключа клиента.
+          - name: post_code
+            description: Почтовый индекс, строка с сохранением начальных нулей.

@@ -1,0 +1,68 @@
+version: 2
+models:
+  - name: stg_transactions
+    description: >-
+      Нормализация пробелов, регистра и типов без удаления ошибочных строк. Клиент -
+      dbt_utils surrogate key из имени, фамилии и полного адреса; это приближение,
+      поскольку в исходном CSV нет стабильного customer_id. Суммы в USD.
+    columns:
+      - name: transaction_id
+        description: Уникальная транзакция исходного CSV.
+        data_tests: [not_null, unique]
+      - name: customer_id
+        description: Детерминированный составной ключ клиента, не номер карты.
+        data_tests: [not_null]
+      - name: transaction_time
+        description: Время покупки из CSV.
+        data_tests: [not_null]
+      - name: transaction_date
+        description: Календарная дата покупки.
+        data_tests: [not_null]
+      - name: transaction_hour
+        description: Час покупки, от 0 до 23.
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments: {min_value: 0, max_value: 23}
+      - name: day_of_week
+        description: ISO день недели, понедельник 1, воскресенье 7. Используется dbt_date.
+        data_tests:
+          - accepted_values:
+              arguments: {values: [1, 2, 3, 4, 5, 6, 7], quote: false}
+      - name: merchant
+        description: Название мерчанта без внешних пробелов.
+        data_tests: [not_null]
+      - name: category
+        description: Категория покупки в нижнем регистре.
+        data_tests: [not_null]
+      - name: state
+        description: Код штата в верхнем регистре, включая DC.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: "ref('states')", field: state_code}
+      - name: gender
+        description: Нормализованный пол клиента.
+        data_tests:
+          - accepted_values:
+              arguments: {values: [M, F]}
+      - name: amount
+        description: Точная денежная сумма Decimal(18,2), без округления через binary float.
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments: {min_value: 0}
+      - name: amount_bucket
+        description: SMALL < 100, MEDIUM от 100 до 499.99, LARGE от 500 USD; собственный макрос.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments: {values: [SMALL, MEDIUM, LARGE]}
+      - name: is_large_transaction
+        description: Сумма от large_transaction_amount, по умолчанию 500 USD включительно.
+      - name: is_fraud
+        description: Наблюдаемый признак мошенничества, а не прогноз модели.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments: {values: [0, 1], quote: false}

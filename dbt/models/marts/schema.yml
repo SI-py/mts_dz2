@@ -1,0 +1,293 @@
+version: 2
+models:
+- name: mart_daily_state_metrics
+  description: Одна строка на дату и штат. Точные суммы, средний чек, P95 через quantileExact; крупная
+    покупка от 500 USD.
+  columns:
+  - name: transaction_date
+    description: Дата покупки.
+    data_tests:
+    - not_null
+  - name: state
+    description: Код штата.
+    data_tests:
+    - not_null
+  - name: transaction_count
+    description: Число покупок.
+    data_tests:
+    - not_null
+  - name: total_amount
+    description: Сумма покупок в USD.
+    data_tests:
+    - not_null
+  - name: average_amount
+    description: Средняя сумма покупки в USD.
+    data_tests:
+    - not_null
+  - name: p95_amount
+    description: 95-й процентиль суммы покупки.
+    data_tests:
+    - not_null
+  - name: large_transaction_count
+    description: Число покупок от порога large_transaction_amount.
+    data_tests:
+    - not_null
+  - name: large_transaction_share
+    description: Процент крупных покупок, 0..100.
+    data_tests:
+    - not_null
+    - dbt_expectations.expect_column_values_to_be_between:
+        arguments:
+          min_value: 0
+          max_value: 100
+  data_tests:
+  - dbt_utils.unique_combination_of_columns:
+      arguments:
+        combination_of_columns:
+        - transaction_date
+        - state
+- name: mart_fraud_by_category
+  description: Фрод по категориям. fraud_rate - процент помеченных мошенническими транзакций, а не доля их суммы.
+  columns:
+  - name: category
+    description: Категория покупки.
+    data_tests:
+    - not_null
+    - unique
+  - name: transaction_count
+    description: Всего покупок.
+    data_tests:
+    - not_null
+  - name: fraud_count
+    description: Покупок с target=1.
+    data_tests:
+    - not_null
+  - name: fraud_rate
+    description: Процент мошеннических покупок.
+    data_tests:
+    - not_null
+    - dbt_expectations.expect_column_values_to_be_between:
+        arguments:
+          min_value: 0
+          max_value: 100
+  - name: total_amount
+    description: Сумма всех покупок, USD.
+    data_tests:
+    - not_null
+  - name: fraud_amount
+    description: Сумма мошеннических покупок, USD.
+    data_tests:
+    - not_null
+  - name: average_amount
+    description: Средняя сумма, USD.
+    data_tests:
+    - not_null
+- name: mart_fraud_by_state
+  description: Одна строка на штат, включая DC. Уникальные клиенты считаются по составному ключу; название штата
+    берётся из seed states.
+  columns:
+  - name: state
+    description: Код штата или округа.
+    data_tests:
+    - not_null
+    - unique
+  - name: state_name
+    description: Полное название из справочника states.
+    data_tests:
+    - not_null
+  - name: transaction_count
+    description: Всего покупок.
+    data_tests:
+    - not_null
+  - name: fraud_count
+    description: Число мошеннических покупок.
+    data_tests:
+    - not_null
+  - name: fraud_rate
+    description: Доля фрода в процентах.
+    data_tests:
+    - not_null
+    - dbt_expectations.expect_column_values_to_be_between:
+        arguments:
+          min_value: 0
+          max_value: 100
+  - name: unique_customers
+    description: Точное число составных ключей клиентов.
+    data_tests:
+    - not_null
+  - name: unique_merchants
+    description: Точное число названий мерчантов.
+    data_tests:
+    - not_null
+  - name: total_amount
+    description: Общая сумма, USD.
+    data_tests:
+    - not_null
+  - name: fraud_amount
+    description: Сумма фрода, USD.
+    data_tests:
+    - not_null
+- name: mart_customer_risk_profile
+  description: 'Описательный профиль за всю историю, не прогноз. HIGH: от 3 фродов или fraud_rate >=5%; MEDIUM:
+    есть фрод либо покупка >=1000 USD; иначе LOW. Имя и адрес могут не идентифицировать клиента однозначно.'
+  columns:
+  - name: customer_id
+    description: Составной dbt_utils ключ клиента.
+    data_tests:
+    - not_null
+    - unique
+  - name: transaction_count
+    description: Длина истории в транзакциях.
+    data_tests:
+    - not_null
+  - name: fraud_count
+    description: Число мошеннических покупок.
+    data_tests:
+    - not_null
+  - name: fraud_rate
+    description: Процент фрода за всю историю.
+    data_tests:
+    - not_null
+    - dbt_expectations.expect_column_values_to_be_between:
+        arguments:
+          min_value: 0
+          max_value: 100
+  - name: total_amount
+    description: Общая сумма, USD.
+    data_tests:
+    - not_null
+  - name: average_amount
+    description: Средний чек, USD.
+    data_tests:
+    - not_null
+  - name: max_amount
+    description: Крупнейшая покупка, USD.
+    data_tests:
+    - not_null
+  - name: first_transaction_time
+    description: Первая покупка.
+    data_tests:
+    - not_null
+  - name: last_transaction_time
+    description: Последняя покупка.
+    data_tests:
+    - not_null
+  - name: history_days
+    description: Число дней между первой и последней покупкой.
+    data_tests:
+    - not_null
+  - name: risk_level
+    description: HIGH/MEDIUM/LOW по явно заданным порогам.
+    data_tests:
+    - not_null
+    - accepted_values:
+        arguments:
+          values:
+          - HIGH
+          - MEDIUM
+          - LOW
+- name: mart_hourly_fraud_pattern
+  description: Одна строка на ISO день недели и час. Повышенный риск означает fraud_rate выше общего значения набора;
+    это описательный признак, не статистическая значимость.
+  columns:
+  - name: day_of_week
+    description: ISO день, понедельник 1, воскресенье 7.
+    data_tests:
+    - not_null
+  - name: transaction_hour
+    description: Час 0..23.
+    data_tests:
+    - not_null
+  - name: transaction_count
+    description: Покупок в окне.
+    data_tests:
+    - not_null
+  - name: fraud_count
+    description: Мошеннических покупок в окне.
+    data_tests:
+    - not_null
+  - name: fraud_rate
+    description: Процент фрода в окне.
+    data_tests:
+    - not_null
+    - dbt_expectations.expect_column_values_to_be_between:
+        arguments:
+          min_value: 0
+          max_value: 100
+  - name: total_amount
+    description: Общая сумма в окне, USD.
+    data_tests:
+    - not_null
+  - name: fraud_amount
+    description: Сумма фрода в окне, USD.
+    data_tests:
+    - not_null
+  - name: baseline_fraud_rate
+    description: Процент фрода во всём наборе.
+    data_tests:
+    - not_null
+    - dbt_expectations.expect_column_values_to_be_between:
+        arguments:
+          min_value: 0
+          max_value: 100
+  - name: fraud_rate_lift
+    description: Отношение к общему уровню; NULL, если фрода в наборе нет.
+  - name: is_elevated_risk
+    description: 1, если доля фрода в окне выше baseline.
+    data_tests:
+    - not_null
+  data_tests:
+  - dbt_utils.unique_combination_of_columns:
+      arguments:
+        combination_of_columns:
+        - day_of_week
+        - transaction_hour
+- name: mart_merchant_analytics
+  description: 'Одна строка на нормализованное название мерчанта. Подозрительный: минимум 10 транзакций и fraud_rate
+    >=5%, пороги вынесены в vars.'
+  columns:
+  - name: merchant
+    description: Название мерчанта.
+    data_tests:
+    - not_null
+    - unique
+  - name: transaction_count
+    description: Число покупок.
+    data_tests:
+    - not_null
+  - name: fraud_count
+    description: Число фродов.
+    data_tests:
+    - not_null
+  - name: fraud_rate
+    description: Процент фрода.
+    data_tests:
+    - not_null
+    - dbt_expectations.expect_column_values_to_be_between:
+        arguments:
+          min_value: 0
+          max_value: 100
+  - name: turnover
+    description: Оборот, USD.
+    data_tests:
+    - not_null
+  - name: fraud_amount
+    description: Сумма мошеннических покупок, USD.
+    data_tests:
+    - not_null
+  - name: average_amount
+    description: Средний чек, USD.
+    data_tests:
+    - not_null
+  - name: unique_customers
+    description: Число составных ключей клиентов.
+    data_tests:
+    - not_null
+  - name: states_count
+    description: Число штатов присутствия.
+    data_tests:
+    - not_null
+  - name: is_suspicious
+    description: Флаг достижения обоих порогов объёма и fraud_rate.
+    data_tests:
+    - not_null
