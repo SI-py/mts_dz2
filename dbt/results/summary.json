@@ -1,0 +1,20 @@
+{
+  "versions": {
+    "dbt-core": "1.12.6",
+    "dbt-clickhouse": "1.10.3",
+    "sqlfluff": "4.5.0"
+  },
+  "source_rows": 786431,
+  "fraud_rows": 4504,
+  "models": {
+    "mart_daily_state_metrics": 21386,
+    "mart_fraud_by_category": 14,
+    "mart_fraud_by_state": 51,
+    "mart_customer_risk_profile": 965,
+    "mart_hourly_fraud_pattern": 168,
+    "mart_merchant_analytics": 693
+  },
+  "test_results": {
+    "pass": 111
+  }
+}

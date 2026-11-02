@@ -94,3 +94,11 @@ docker compose run --rm cli benchmark --runs 5
 python3 scripts/run.py dashboard
 docker compose run --rm cli --help
 ```
+
+## ДЗ4: dbt
+
+Проект, инструкции и результаты: [dbt/README.md](dbt/README.md).
+
+```bash
+python3 dbt/scripts/run.py smoke --reset
+```

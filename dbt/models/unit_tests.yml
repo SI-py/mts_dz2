@@ -1,0 +1,447 @@
+version: 2
+unit_tests:
+- name: staging_normalizes_and_buckets_boundaries
+  model: stg_transactions
+  given:
+  - input: source('raw', 'transactions')
+    rows:
+    - transaction_id: t0
+      transaction_time: '2024-01-01 00:00:00'
+      merch: ' Store '
+      cat_id: ' Shopping_Net '
+      amount: 0
+      name_1: ' Jane '
+      name_2: DOE
+      gender: ' f '
+      street: ' Main 1 '
+      one_city: New York
+      us_state: ' ny '
+      post_code: '00100'
+      lat: 40.0
+      lon: -74.0
+      merchant_lat: 40.1
+      merchant_lon: -74.1
+      target: 0
+    - transaction_id: t1
+      transaction_time: '2024-01-01 00:00:00'
+      merch: ' Store '
+      cat_id: ' Shopping_Net '
+      amount: 99.99
+      name_1: ' Jane '
+      name_2: DOE
+      gender: ' f '
+      street: ' Main 1 '
+      one_city: New York
+      us_state: ' ny '
+      post_code: '00100'
+      lat: 40.0
+      lon: -74.0
+      merchant_lat: 40.1
+      merchant_lon: -74.1
+      target: 0
+    - transaction_id: t2
+      transaction_time: '2024-01-01 00:00:00'
+      merch: ' Store '
+      cat_id: ' Shopping_Net '
+      amount: 100
+      name_1: ' Jane '
+      name_2: DOE
+      gender: ' f '
+      street: ' Main 1 '
+      one_city: New York
+      us_state: ' ny '
+      post_code: '00100'
+      lat: 40.0
+      lon: -74.0
+      merchant_lat: 40.1
+      merchant_lon: -74.1
+      target: 0
+    - transaction_id: t3
+      transaction_time: '2024-01-01 00:00:00'
+      merch: ' Store '
+      cat_id: ' Shopping_Net '
+      amount: 499.99
+      name_1: ' Jane '
+      name_2: DOE
+      gender: ' f '
+      street: ' Main 1 '
+      one_city: New York
+      us_state: ' ny '
+      post_code: '00100'
+      lat: 40.0
+      lon: -74.0
+      merchant_lat: 40.1
+      merchant_lon: -74.1
+      target: 0
+    - transaction_id: t4
+      transaction_time: '2024-01-01 00:00:00'
+      merch: ' Store '
+      cat_id: ' Shopping_Net '
+      amount: 500
+      name_1: ' Jane '
+      name_2: DOE
+      gender: ' f '
+      street: ' Main 1 '
+      one_city: New York
+      us_state: ' ny '
+      post_code: '00100'
+      lat: 40.0
+      lon: -74.0
+      merchant_lat: 40.1
+      merchant_lon: -74.1
+      target: 0
+    - transaction_id: t5
+      transaction_time: '2024-01-07 23:00:00'
+      merch: ' Store '
+      cat_id: ' Shopping_Net '
+      amount: 1000
+      name_1: ' Jane '
+      name_2: DOE
+      gender: ' f '
+      street: ' Main 1 '
+      one_city: New York
+      us_state: ' ny '
+      post_code: '00100'
+      lat: 40.0
+      lon: -74.0
+      merchant_lat: 40.1
+      merchant_lon: -74.1
+      target: 0
+  expect:
+    rows:
+    - transaction_id: t0
+      amount: 0
+      category: shopping_net
+      merchant: Store
+      gender: F
+      state: NY
+      amount_bucket: SMALL
+      is_large_transaction: 0
+      day_of_week: 1
+      transaction_hour: 0
+    - transaction_id: t1
+      amount: 99.99
+      category: shopping_net
+      merchant: Store
+      gender: F
+      state: NY
+      amount_bucket: SMALL
+      is_large_transaction: 0
+      day_of_week: 1
+      transaction_hour: 0
+    - transaction_id: t2
+      amount: 100
+      category: shopping_net
+      merchant: Store
+      gender: F
+      state: NY
+      amount_bucket: MEDIUM
+      is_large_transaction: 0
+      day_of_week: 1
+      transaction_hour: 0
+    - transaction_id: t3
+      amount: 499.99
+      category: shopping_net
+      merchant: Store
+      gender: F
+      state: NY
+      amount_bucket: MEDIUM
+      is_large_transaction: 0
+      day_of_week: 1
+      transaction_hour: 0
+    - transaction_id: t4
+      amount: 500
+      category: shopping_net
+      merchant: Store
+      gender: F
+      state: NY
+      amount_bucket: LARGE
+      is_large_transaction: 1
+      day_of_week: 1
+      transaction_hour: 0
+    - transaction_id: t5
+      amount: 1000
+      category: shopping_net
+      merchant: Store
+      gender: F
+      state: NY
+      amount_bucket: LARGE
+      is_large_transaction: 1
+      day_of_week: 7
+      transaction_hour: 23
+- name: daily_metrics_include_threshold_and_exact_p95
+  model: mart_daily_state_metrics
+  given:
+  - input: ref('stg_transactions')
+    rows:
+    - &id001
+      transaction_date: '2024-01-01'
+      state: CA
+      customer_id: c1
+      merchant: Store
+      transaction_time: '2024-01-01 10:00:00'
+      day_of_week: 1
+      transaction_hour: 10
+      is_large_transaction: false
+      transaction_id: t1
+      amount: 10
+      is_fraud: 0
+    - &id002
+      transaction_date: '2024-01-01'
+      state: CA
+      customer_id: c1
+      merchant: Store
+      transaction_time: '2024-01-01 10:00:00'
+      day_of_week: 1
+      transaction_hour: 10
+      is_large_transaction: true
+      transaction_id: t2
+      amount: 500
+      is_fraud: 1
+  expect:
+    rows:
+    - state: CA
+      transaction_date: '2024-01-01'
+      transaction_count: 2
+      total_amount: 510
+      average_amount: 255
+      p95_amount: 500
+      large_transaction_count: 1
+      large_transaction_share: 50
+- name: category_fraud_is_a_percentage
+  model: mart_fraud_by_category
+  given:
+  - input: ref('stg_transactions')
+    rows:
+    - transaction_date: '2024-01-01'
+      state: CA
+      customer_id: c1
+      merchant: Store
+      transaction_time: '2024-01-01 10:00:00'
+      day_of_week: 1
+      transaction_hour: 10
+      is_large_transaction: false
+      transaction_id: t1
+      amount: 10
+      is_fraud: 0
+      category: travel
+    - transaction_date: '2024-01-01'
+      state: CA
+      customer_id: c1
+      merchant: Store
+      transaction_time: '2024-01-01 10:00:00'
+      day_of_week: 1
+      transaction_hour: 10
+      is_large_transaction: true
+      transaction_id: t2
+      amount: 500
+      is_fraud: 1
+      category: travel
+  expect:
+    rows:
+    - category: travel
+      transaction_count: 2
+      fraud_count: 1
+      fraud_rate: 50
+      total_amount: 510
+      fraud_amount: 500
+- name: customer_risk_thresholds
+  model: mart_customer_risk_profile
+  given:
+  - input: ref('stg_transactions')
+    format: sql
+    fixture: customer_risk
+  expect:
+    rows:
+    - customer_id: low
+      risk_level: LOW
+    - customer_id: large
+      risk_level: MEDIUM
+    - customer_id: medium
+      risk_level: MEDIUM
+    - customer_id: high_rate
+      risk_level: HIGH
+    - customer_id: high_count
+      risk_level: HIGH
+- name: hourly_zero_fraud_has_no_infinite_lift
+  model: mart_hourly_fraud_pattern
+  given:
+  - input: ref('stg_transactions')
+    rows:
+    - transaction_date: '2024-01-01'
+      state: CA
+      customer_id: c1
+      merchant: Store
+      transaction_time: '2024-01-01 10:00:00'
+      day_of_week: 1
+      transaction_hour: 10
+      is_large_transaction: false
+      transaction_id: t0
+      amount: 10
+      is_fraud: 0
+  expect:
+    rows:
+    - day_of_week: 1
+      transaction_hour: 10
+      transaction_count: 1
+      fraud_count: 0
+      fraud_rate: 0
+      fraud_rate_lift: null
+      is_elevated_risk: false
+- name: merchant_requires_both_volume_and_fraud_thresholds
+  model: mart_merchant_analytics
+  given:
+  - input: ref('stg_transactions')
+    rows:
+    - transaction_date: '2024-01-01'
+      state: CA
+      customer_id: c1
+      merchant: Flagged
+      transaction_time: '2024-01-01 10:00:00'
+      day_of_week: 1
+      transaction_hour: 10
+      is_large_transaction: false
+      transaction_id: m0
+      amount: 10
+      is_fraud: 1
+    - transaction_date: '2024-01-01'
+      state: CA
+      customer_id: c1
+      merchant: Flagged
+      transaction_time: '2024-01-01 10:00:00'
+      day_of_week: 1
+      transaction_hour: 10
+      is_large_transaction: false
+      transaction_id: m1
+      amount: 10
+      is_fraud: 0
+    - transaction_date: '2024-01-01'
+      state: CA
+      customer_id: c1
+      merchant: Flagged
+      transaction_time: '2024-01-01 10:00:00'
+      day_of_week: 1
+      transaction_hour: 10
+      is_large_transaction: false
+      transaction_id: m2
+      amount: 10
+      is_fraud: 0
+    - transaction_date: '2024-01-01'
+      state: CA
+      customer_id: c1
+      merchant: Flagged
+      transaction_time: '2024-01-01 10:00:00'
+      day_of_week: 1
+      transaction_hour: 10
+      is_large_transaction: false
+      transaction_id: m3
+      amount: 10
+      is_fraud: 0
+    - transaction_date: '2024-01-01'
+      state: CA
+      customer_id: c1
+      merchant: Flagged
+      transaction_time: '2024-01-01 10:00:00'
+      day_of_week: 1
+      transaction_hour: 10
+      is_large_transaction: false
+      transaction_id: m4
+      amount: 10
+      is_fraud: 0
+    - transaction_date: '2024-01-01'
+      state: CA
+      customer_id: c1
+      merchant: Flagged
+      transaction_time: '2024-01-01 10:00:00'
+      day_of_week: 1
+      transaction_hour: 10
+      is_large_transaction: false
+      transaction_id: m5
+      amount: 10
+      is_fraud: 0
+    - transaction_date: '2024-01-01'
+      state: CA
+      customer_id: c1
+      merchant: Flagged
+      transaction_time: '2024-01-01 10:00:00'
+      day_of_week: 1
+      transaction_hour: 10
+      is_large_transaction: false
+      transaction_id: m6
+      amount: 10
+      is_fraud: 0
+    - transaction_date: '2024-01-01'
+      state: CA
+      customer_id: c1
+      merchant: Flagged
+      transaction_time: '2024-01-01 10:00:00'
+      day_of_week: 1
+      transaction_hour: 10
+      is_large_transaction: false
+      transaction_id: m7
+      amount: 10
+      is_fraud: 0
+    - transaction_date: '2024-01-01'
+      state: CA
+      customer_id: c1
+      merchant: Flagged
+      transaction_time: '2024-01-01 10:00:00'
+      day_of_week: 1
+      transaction_hour: 10
+      is_large_transaction: false
+      transaction_id: m8
+      amount: 10
+      is_fraud: 0
+    - transaction_date: '2024-01-01'
+      state: CA
+      customer_id: c1
+      merchant: Flagged
+      transaction_time: '2024-01-01 10:00:00'
+      day_of_week: 1
+      transaction_hour: 10
+      is_large_transaction: false
+      transaction_id: m9
+      amount: 10
+      is_fraud: 0
+    - transaction_date: '2024-01-01'
+      state: CA
+      customer_id: c1
+      merchant: Too small
+      transaction_time: '2024-01-01 10:00:00'
+      day_of_week: 1
+      transaction_hour: 10
+      is_large_transaction: false
+      transaction_id: small
+      amount: 50
+      is_fraud: 1
+  expect:
+    rows:
+    - merchant: Flagged
+      transaction_count: 10
+      fraud_rate: 10
+      is_suspicious: true
+    - merchant: Too small
+      transaction_count: 1
+      fraud_rate: 100
+      is_suspicious: false
+- name: state_counts_distinct_entities_and_joins_seed
+  model: mart_fraud_by_state
+  given:
+  - input: ref('stg_transactions')
+    rows:
+    - *id001
+    - *id002
+  - input: ref('states')
+    rows:
+    - state_code: CA
+      state_name: California
+  expect:
+    rows:
+    - state: CA
+      state_name: California
+      transaction_count: 2
+      fraud_count: 1
+      fraud_rate: 50
+      unique_customers: 1
+      unique_merchants: 1
+      total_amount: 510
